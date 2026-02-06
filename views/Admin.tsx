@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { AgentRole, Feedback } from '../types';
+import { AgentRole, Feedback, KnowledgeBase } from '../types';
 
-type AdminTab = 'Dashboard' | 'API Management' | 'Storage' | 'Experts' | 'Feedback' | 'Agents';
+type AdminTab = 'Dashboard' | 'API Management' | 'Storage' | 'Experts' | 'Feedback' | 'Agents' | 'Knowledge Hub';
 
 interface ApiConfig {
   id: string;
@@ -42,14 +42,19 @@ interface AgentMonitor {
 }
 
 const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('Dashboard');
+  const [activeTab, setActiveTab] = useState<AdminTab>('Knowledge Hub');
   const [geminiKey, setGeminiKey] = useState('••••••••••••••••••••••••••••••••');
+  const [kbForm, setKbForm] = useState({ name: '', scope: '' });
+  const [activeSubTab, setActiveSubTab] = useState('Knowledge Hub');
   
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([
+    { id: 'kb1', name: 'Next-Gen Mobility', summary: 'Analysis of electric and autonomous transportation trends.', keywords: ['EV', 'Lidar', 'Ride-sharing'], findings: ['High demand in APAC', 'Battery costs falling'] },
+    { id: 'kb2', name: 'Decentralized Finance', summary: 'Synthesized research on liquidity pools and flash loans.', keywords: ['DeFi', 'DEX', 'Staking'], findings: ['Regulatory pressure increasing', 'Yield farming peak'] },
+  ]);
+
   const [feedbackList] = useState<(Feedback & { project: string })[]>([
     { id: 'f1', expertName: "Dr. Aris Thorne", rating: 5, comment: "The interviewer agent asked very deep questions about supply chain logistics. Very impressive. It caught nuances I didn't expect from an AI.", timestamp: "2024-05-20T14:02:00Z", project: "Global Logistics AI" },
     { id: 'f2', expertName: "Lina Vance", rating: 4, comment: "Themes were spot on, but the voice synthesis had a slight lag during the middle of the session. Research depth was excellent though.", timestamp: "2024-05-20T13:45:00Z", project: "Sustainable Energy Grid" },
-    { id: 'f3', expertName: "Marcus Hertz", rating: 3, comment: "The questions were a bit generic at the start. It took a few turns for the agent to really get into the technical specificities of the medical hardware.", timestamp: "2024-05-19T09:20:00Z", project: "MediChain Hardware" },
-    { id: 'f4', expertName: "Sarah Chen", rating: 5, comment: "Exemplary performance. The agent correctly identified the key regulatory hurdles in the new market discovery phase.", timestamp: "2024-05-18T16:10:00Z", project: "FinTech Discovery" },
   ]);
 
   const [apis, setApis] = useState<ApiConfig[]>([
@@ -69,33 +74,11 @@ const Admin: React.FC = () => {
       icon: 'fa-cloud',
       color: 'text-indigo-400'
     },
-    { 
-      id: 's2', 
-      name: 'Expert Vector Store', 
-      type: 'vector', 
-      provider: 'Pinecone', 
-      status: 'connected', 
-      details: { endpoint: 'expert-index-v2.svc.us-east-1.pinecone.io', region: 'us-east-1' },
-      icon: 'fa-database',
-      color: 'text-emerald-400'
-    },
-    { 
-      id: 's3', 
-      name: 'Relational Archive', 
-      type: 'sql', 
-      provider: 'PostgreSQL', 
-      status: 'disconnected', 
-      details: { endpoint: 'db.validatorx.cloud', region: 'eu-west-1' },
-      icon: 'fa-server',
-      color: 'text-blue-400'
-    },
   ]);
 
   const [agents] = useState<AgentMonitor[]>([
     { id: 'a1', name: 'Discovery-X1', role: AgentRole.DISCOVERY, status: 'active', successRate: 98, tasksCompleted: 1420, currentTask: 'Scanning Web3 trends' },
     { id: 'a2', name: 'Research-Prime', role: AgentRole.RESEARCH, status: 'busy', successRate: 94, tasksCompleted: 890, currentTask: 'Deep dive: AgriDrone' },
-    { id: 'a3', name: 'Gen-Questions', role: AgentRole.QUESTION_GENERATOR, status: 'idle', successRate: 99, tasksCompleted: 2301 },
-    { id: 'a4', name: 'Validator-Alpha', role: AgentRole.VALIDATOR, status: 'active', successRate: 96, tasksCompleted: 452, currentTask: 'Synthesizing expert feedback' },
   ]);
 
   const [testingId, setTestingId] = useState<string | null>(null);
@@ -110,29 +93,135 @@ const Admin: React.FC = () => {
     
     setTimeout(() => {
       if (isStorage) {
-        setStorages(prev => prev.map(s => {
-          if (s.id === id) {
-            const isSuccess = Math.random() > 0.1;
-            return { ...s, status: isSuccess ? 'connected' : 'error' };
-          }
-          return s;
-        }));
+        setStorages(prev => prev.map(s => (s.id === id ? { ...s, status: Math.random() > 0.1 ? 'connected' : 'error' } : s)));
       } else {
-        setApis(prev => prev.map(api => {
-          if (api.id === id) {
-            const isSuccess = Math.random() > 0.1;
-            return { 
-              ...api, 
-              status: isSuccess ? 'online' : 'error', 
-              latency: isSuccess ? Math.floor(Math.random() * 500) + 100 : 0 
-            };
-          }
-          return api;
-        }));
+        setApis(prev => prev.map(api => (api.id === id ? { ...api, status: Math.random() > 0.1 ? 'online' : 'error', latency: Math.floor(Math.random() * 500) + 100 } : api)));
       }
       setTestingId(null);
     }, 1500);
   };
+
+  const renderKnowledgeHub = () => (
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {/* Horizontal Sub-Navigation */}
+      <div className="flex bg-[#F1F5F9]/50 p-1.5 rounded-2xl border border-slate-200 w-fit">
+        {['Build Intelligence', 'Knowledge Hub', 'Sharing Hub', 'Infrastructure'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveSubTab(tab)}
+            className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+              activeSubTab === tab ? 'bg-white text-[#0F172A] shadow-sm' : 'text-[#94A3B8] hover:text-[#475569]'
+            }`}
+          >
+            <i className={`fa-solid mr-2 ${
+              tab === 'Build Intelligence' ? 'fa-microchip' : 
+              tab === 'Knowledge Hub' ? 'fa-brain' : 
+              tab === 'Sharing Hub' ? 'fa-share-nodes' : 'fa-key'
+            }`}></i>
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Form Section - Based on Screenshot */}
+      <div className="text-center space-y-10 py-12">
+        <div className="space-y-2">
+          <h2 className="text-[28px] font-black text-white tracking-tight uppercase">Knowledge Ingestion Engine</h2>
+          <p className="text-[#94A3B8] text-[11px] font-bold uppercase tracking-[0.3em]">Multi-Agent VLM / Extraction Pipeline</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto text-left">
+          <div className="space-y-3">
+            <label className="text-[11px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Central KB Name</label>
+            <input 
+              type="text"
+              placeholder="E.G. NEXT-GEN MOBILITY"
+              className="w-full bg-[#F8FAFC]/5 border border-[#E2E8F0]/20 rounded-2xl px-6 py-5 text-sm font-bold placeholder:text-[#475569] text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all shadow-inner"
+              value={kbForm.name}
+              onChange={(e) => setKbForm({ ...kbForm, name: e.target.value })}
+            />
+          </div>
+          <div className="space-y-3">
+            <label className="text-[11px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Knowledge Scope</label>
+            <input 
+              type="text"
+              placeholder="Domain coverage..."
+              className="w-full bg-[#F8FAFC]/5 border border-[#E2E8F0]/20 rounded-2xl px-6 py-5 text-sm font-bold placeholder:text-[#475569] text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all shadow-inner"
+              value={kbForm.scope}
+              onChange={(e) => setKbForm({ ...kbForm, scope: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <button className="bg-[#0F172A] border border-[#334155] hover:bg-[#1E293B] text-white w-full max-w-4xl py-6 rounded-[24px] text-xs font-black uppercase tracking-[0.4em] shadow-2xl transition-all active:scale-[0.98] group">
+          <span className="group-hover:tracking-[0.5em] transition-all">Initiate Agentic Ingestion</span>
+        </button>
+      </div>
+
+      {/* Existing Knowledge Bases / RAG Backend Monitoring */}
+      <div className="space-y-6 pt-12 border-t border-slate-800/50">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+            Active RAG Contexts
+          </h3>
+          <span className="text-[10px] font-bold text-slate-500 uppercase">Synchronized with Google Storage</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {knowledgeBases.map((kb) => (
+            <div key={kb.id} className="glass p-6 rounded-3xl border border-slate-800 hover:border-indigo-500/30 transition-all cursor-pointer group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                    <i className="fa-solid fa-folder-tree"></i>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white">{kb.name}</h4>
+                    <p className="text-[10px] text-slate-500 font-mono">ID: {kb.id}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-white transition-colors">
+                    <i className="fa-solid fa-pen-to-square text-[10px]"></i>
+                  </button>
+                  <button className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-rose-400 transition-colors">
+                    <i className="fa-solid fa-trash text-[10px]"></i>
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-400 mb-4 line-clamp-2 italic">"{kb.summary}"</p>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {kb.keywords.map((word) => (
+                  <span key={word} className="px-2 py-1 rounded-md bg-indigo-500/5 border border-indigo-500/10 text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">
+                    {word}
+                  </span>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                   <span className="text-[10px] text-slate-500 font-bold uppercase flex items-center gap-1.5">
+                     <i className="fa-solid fa-file-invoice text-indigo-400"></i> {kb.findings.length} Source Findings
+                   </span>
+                </div>
+                <button className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300">
+                  Inspect Data Core →
+                </button>
+              </div>
+            </div>
+          ))}
+          
+          <div className="border-2 border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center p-8 text-slate-600 hover:border-slate-700 hover:text-slate-400 transition-all cursor-pointer group">
+             <i className="fa-solid fa-plus-circle text-3xl mb-3 group-hover:scale-110 transition-transform"></i>
+             <span className="text-xs font-bold uppercase tracking-widest">Connect External KB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderFeedback = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -205,15 +294,6 @@ const Admin: React.FC = () => {
           </div>
         ))}
       </div>
-
-      <div className="glass p-8 rounded-2xl border-l-4 border-emerald-500 bg-emerald-500/5">
-        <h4 className="text-emerald-400 font-bold mb-2 flex items-center gap-2">
-          <i className="fa-solid fa-microchip"></i> Automated Refinement Engine
-        </h4>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          The feedback logged above is automatically processed by our RAG system. Gemini Pro analyzes negative sentiment or low ratings to adjust the hypothesis-generation logic and system instructions for the <span className="text-indigo-400 font-bold">{AgentRole.INTERVIEWER}</span> agents.
-        </p>
-      </div>
     </div>
   );
 
@@ -221,14 +301,6 @@ const Admin: React.FC = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold">Agent Fleet Monitor</h3>
-        <div className="flex gap-2">
-           <button className="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-600/30 transition-all">
-            Scale Fleet
-          </button>
-          <button className="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-700 transition-all">
-            Refresh Metrics
-          </button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -263,9 +335,6 @@ const Admin: React.FC = () => {
                 <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Success Rate</p>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-mono font-bold text-indigo-400">{agent.successRate}%</span>
-                  <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500" style={{ width: `${agent.successRate}%` }}></div>
-                  </div>
                 </div>
               </div>
               <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800/50">
@@ -282,166 +351,14 @@ const Admin: React.FC = () => {
                  {agent.currentTask ? `"${agent.currentTask}"` : "Waiting for assignment..."}
                </p>
             </div>
-            
-            <div className="mt-4 flex gap-2">
-               <button className="flex-1 py-2 text-[10px] font-bold text-indigo-400 border border-indigo-500/20 rounded-lg hover:bg-indigo-500/10 transition-all">Inspect Logic</button>
-               <button className="flex-1 py-2 text-[10px] font-bold text-slate-400 border border-slate-800 rounded-lg hover:bg-slate-800 transition-all">Restart</button>
-            </div>
           </div>
         ))}
-      </div>
-
-      <div className="glass p-8 rounded-2xl border-l-4 border-indigo-500 bg-indigo-900/5">
-        <h4 className="text-indigo-400 font-bold mb-2 flex items-center gap-2">
-          <i className="fa-solid fa-chart-line"></i> Global Fleet Performance
-        </h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-2">
-           <div>
-             <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Avg Reasoning Latency</p>
-             <p className="text-xl font-bold">1.2s</p>
-           </div>
-           <div>
-             <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Context Cache Hit</p>
-             <p className="text-xl font-bold">84%</p>
-           </div>
-           <div>
-             <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Tokens/Sec (Agg)</p>
-             <p className="text-xl font-bold">4.2k</p>
-           </div>
-           <div>
-             <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Error Rate</p>
-             <p className="text-xl font-bold text-emerald-500">0.02%</p>
-           </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStorageManagement = () => (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold">Storage Infrastructure</h3>
-        <button className="text-xs font-bold text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition-all">
-          <i className="fa-solid fa-plus mr-2"></i> Add New Provider
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        {storages.map((storage) => (
-          <div key={storage.id} className="glass p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all group">
-            <div className="flex flex-col lg:flex-row gap-8">
-              <div className="flex items-center gap-4 min-w-[240px]">
-                <div className={`w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-2xl ${storage.color}`}>
-                  <i className={`fa-solid ${storage.icon}`}></i>
-                </div>
-                <div>
-                  <h4 className="font-bold text-white flex items-center gap-2">
-                    {storage.name}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] text-slate-500 font-mono uppercase px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800">
-                      {storage.provider}
-                    </span>
-                    <span className={`flex items-center gap-1 text-[10px] font-bold uppercase ${
-                      storage.status === 'connected' ? 'text-emerald-400' : 
-                      storage.status === 'error' ? 'text-rose-400' : 
-                      storage.status === 'testing' ? 'text-indigo-400 animate-pulse' : 'text-slate-500'
-                    }`}>
-                      {storage.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {storage.provider === 'Google Storage' ? (
-                  <>
-                    <div>
-                      <label className="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Bucket Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue={storage.details.bucketName}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Project ID</label>
-                      <input 
-                        type="text" 
-                        defaultValue={storage.details.projectId}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="md:col-span-2">
-                      <label className="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Endpoint / Host</label>
-                      <input 
-                        type="text" 
-                        defaultValue={storage.details.endpoint}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => testConnection(storage.id, true)}
-                  disabled={testingId !== null}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-2"
-                >
-                   {storage.status === 'testing' ? (
-                    <i className="fa-solid fa-spinner animate-spin"></i>
-                  ) : (
-                    <i className="fa-solid fa-cloud-arrow-up"></i>
-                  )}
-                  Ping
-                </button>
-                <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all">
-                  Save
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-slate-800/50 flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-              <div className="flex gap-4">
-                <span>Storage Class: <span className="text-slate-400">Standard</span></span>
-                <span>Region: <span className="text-slate-400">{storage.details.region}</span></span>
-                <span>Total Data: <span className="text-slate-400">14.2 GB</span></span>
-              </div>
-              <div className="flex gap-4">
-                <span className="text-indigo-400 cursor-pointer hover:underline flex items-center gap-1">
-                   <i className="fa-solid fa-key text-[8px]"></i> Manage Keys
-                </span>
-                <span className="text-rose-400 cursor-pointer hover:underline">Flush Cache</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="glass p-6 rounded-2xl bg-indigo-900/10 border-indigo-500/20">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 mt-1">
-            <i className="fa-solid fa-circle-info"></i>
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-white mb-1">Knowledge Base Sync</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              ValidatorX automatically partitions data from deep research agents into these storage clusters. Each builder project receives a unique subdirectory for its Knowledge Base to ensure strict isolation and RAG performance.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
 
   const renderApiManagement = () => (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      {/* Primary Configuration Section: Gemini Pro */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -459,13 +376,6 @@ const Admin: React.FC = () => {
               <div>
                 <h4 className="text-2xl font-bold text-white tracking-tight">Gemini 3 Pro</h4>
                 <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Core Reasoning Engine</p>
-                <div className="mt-4 flex flex-col gap-2">
-                  <span className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-tighter">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>
-                    Operational
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-mono">Uptime: 99.99%</span>
-                </div>
               </div>
             </div>
 
@@ -473,7 +383,6 @@ const Admin: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Gemini API Key</label>
-                  <span className="text-[10px] font-mono text-indigo-400 cursor-pointer hover:text-indigo-300">Get key from AI Studio →</span>
                 </div>
                 <div className="relative group">
                   <input 
@@ -484,9 +393,6 @@ const Admin: React.FC = () => {
                     className="w-full bg-slate-950/80 border border-slate-700/50 rounded-2xl px-5 py-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all placeholder:text-slate-800 text-indigo-100 group-hover:border-slate-600"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <button className="p-2 text-slate-600 hover:text-indigo-400 transition-colors">
-                      <i className="fa-solid fa-eye-slash text-xs"></i>
-                    </button>
                     <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
                       Save Changes
                     </button>
@@ -511,103 +417,45 @@ const Admin: React.FC = () => {
           </div>
         </div>
       </section>
+    </div>
+  );
 
-      {/* Secondary Models Section */}
-      <section className="space-y-6">
-        <h3 className="text-lg font-bold text-slate-300">Secondary & Fallback Models</h3>
-        <div className="grid grid-cols-1 gap-6">
-          {apis.map((api) => (
-            <div key={api.id} className="glass p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all group">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-2xl ${api.color}`}>
-                    <i className={`fa-brands ${api.icon}`}></i>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white flex items-center gap-2">
-                      {api.name}
-                      <span className="text-[10px] text-slate-500 font-mono tracking-tighter uppercase px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800">
-                        {api.provider}
-                      </span>
-                    </h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className={`flex items-center gap-1.5 text-[10px] font-bold uppercase ${
-                        api.status === 'online' ? 'text-emerald-400' : 
-                        api.status === 'error' ? 'text-rose-400' : 
-                        api.status === 'testing' ? 'text-indigo-400 animate-pulse' : 'text-slate-500'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          api.status === 'online' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 
-                          api.status === 'error' ? 'bg-rose-400' : 
-                          api.status === 'testing' ? 'bg-indigo-400' : 'bg-slate-500'
-                        }`}></span>
-                        {api.status}
-                      </span>
-                      {api.status === 'online' && (
-                        <span className="text-[10px] text-slate-500 font-mono">
-                          Latency: <span className="text-slate-300">{api.latency}ms</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-1 max-w-md">
-                  <div className="relative">
-                    <input 
-                      type="password" 
-                      defaultValue={api.hasKey ? "••••••••••••••••" : ""}
-                      placeholder="Enter API Key"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-700"
-                    />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
-                      <i className="fa-solid fa-eye-slash text-xs"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => testConnection(api.id)}
-                    disabled={testingId !== null}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {api.status === 'testing' ? (
-                      <i className="fa-solid fa-spinner animate-spin"></i>
-                    ) : (
-                      <i className="fa-solid fa-vial"></i>
-                    )}
-                    Test
-                  </button>
-                  <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all">
-                    Update
-                  </button>
-                </div>
+  // Added renderStorage to fix the error and display storage infrastructure UI
+  const renderStorage = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold">Storage Infrastructure</h3>
+      </div>
+      <div className="grid grid-cols-1 gap-6">
+        {storages.map(storage => (
+          <div key={storage.id} className="glass p-6 rounded-2xl border border-slate-800 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-xl ${storage.color}`}>
+                <i className={`fa-solid ${storage.icon}`}></i>
               </div>
-              
-              <div className="mt-4 pt-4 border-t border-slate-800/50 flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                <div className="flex gap-4">
-                  <span>Usage: <span className="text-slate-400">12,402 / 50,000 req</span></span>
-                  <span>Uptime: <span className="text-emerald-500">99.98%</span></span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-indigo-400 cursor-pointer hover:underline">View Documentation</span>
-                  <span className="text-slate-600">|</span>
-                  <span className="text-rose-400 cursor-pointer hover:underline">Revoke Key</span>
-                </div>
+              <div>
+                <h4 className="font-bold text-white">{storage.name}</h4>
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{storage.type} • {storage.provider}</p>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="glass p-8 rounded-2xl border-l-4 border-amber-500 bg-amber-500/5">
-        <h4 className="text-amber-400 font-bold mb-2 flex items-center gap-2">
-          <i className="fa-solid fa-triangle-exclamation"></i> Security Warning
-        </h4>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          API keys are stored in encrypted format within the secure vault. Access is restricted to super-admins. Ensure that you use production-grade keys with appropriate rate limits to avoid agent degradation during high-traffic validation cycles.
-        </p>
+            <div className="flex items-center gap-4">
+              <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
+                storage.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                storage.status === 'testing' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+              }`}>
+                {storage.status}
+              </span>
+              <button 
+                onClick={() => testConnection(storage.id, true)}
+                disabled={testingId === storage.id}
+                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+              >
+                {testingId === storage.id ? 'Testing...' : 'Test Connection'}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -628,26 +476,6 @@ const Admin: React.FC = () => {
           <h4 className="text-3xl font-bold">8,529</h4>
         </div>
       </section>
-
-      <section className="glass p-8 rounded-2xl space-y-6">
-        <h3 className="text-xl font-bold">Recent Expert Feedback Highlights</h3>
-        <div className="space-y-4">
-          {feedbackList.slice(0, 2).map((f) => (
-            <div key={f.id} className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-sm text-indigo-300">{f.expertName}</span>
-                <span className="text-[10px] text-slate-500 font-mono">{new Date(f.timestamp).toLocaleDateString()}</span>
-              </div>
-              <div className="flex gap-1">
-                {Array.from({length: 5}).map((_, star) => (
-                  <i key={star} className={`fa-solid fa-star text-[10px] ${star < f.rating ? 'text-yellow-500' : 'text-slate-700'}`}></i>
-                ))}
-              </div>
-              <p className="text-xs text-slate-400 italic">"{f.comment}"</p>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 
@@ -663,19 +491,11 @@ const Admin: React.FC = () => {
             <p className="text-sm text-slate-500">Central command for validatorX agent infrastructure</p>
           </div>
         </div>
-        <div className="flex gap-4">
-          <span className="bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-full text-[11px] font-bold border border-emerald-500/20 flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span> SYSTEM HEALTH: EXCELLENT
-          </span>
-          <span className="bg-slate-800 text-slate-400 px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-700">
-            v2.4.0-release
-          </span>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="space-y-2">
-          {(['Dashboard', 'API Management', 'Storage', 'Experts', 'Feedback', 'Agents'] as AdminTab[]).map((item) => (
+          {(['Dashboard', 'API Management', 'Storage', 'Experts', 'Feedback', 'Agents', 'Knowledge Hub'] as AdminTab[]).map((item) => (
             <button 
               key={item} 
               onClick={() => setActiveTab(item)}
@@ -690,30 +510,22 @@ const Admin: React.FC = () => {
                 item === 'API Management' ? 'fa-plug' : 
                 item === 'Storage' ? 'fa-database' : 
                 item === 'Experts' ? 'fa-user-tie' : 
-                item === 'Feedback' ? 'fa-comment-dots' : 'fa-robot'
+                item === 'Feedback' ? 'fa-comment-dots' : 
+                item === 'Agents' ? 'fa-robot' : 'fa-brain'
               } text-base`}></i>
               {item}
             </button>
           ))}
-          
-          <div className="mt-8 p-4 glass rounded-xl border-dashed border-slate-700">
-            <p className="text-[10px] font-bold uppercase text-slate-600 mb-3 tracking-widest text-center">Audit Logs</p>
-            <div className="space-y-2">
-              <div className="text-[9px] text-slate-500"><span className="text-indigo-400">14:02</span> Gemini Pro key refreshed</div>
-              <div className="text-[9px] text-slate-500"><span className="text-indigo-400">13:58</span> Expert Feed re-indexed</div>
-              <div className="text-[9px] text-slate-500"><span className="text-indigo-400">12:15</span> Backup cluster synced</div>
-            </div>
-          </div>
         </aside>
 
         <main className="lg:col-span-3">
           {activeTab === 'API Management' && renderApiManagement()}
-          {activeTab === 'Storage' && renderStorageManagement()}
+          {activeTab === 'Storage' && renderStorage()}
           {activeTab === 'Dashboard' && renderDashboard()}
           {activeTab === 'Agents' && renderAgents()}
           {activeTab === 'Feedback' && renderFeedback()}
-          {/* Default to dashboard if not implemented tabs */}
-          {!['API Management', 'Storage', 'Dashboard', 'Agents', 'Feedback'].includes(activeTab) && renderDashboard()}
+          {activeTab === 'Knowledge Hub' && renderKnowledgeHub()}
+          {!['API Management', 'Storage', 'Dashboard', 'Agents', 'Feedback', 'Knowledge Hub'].includes(activeTab) && renderDashboard()}
         </main>
       </div>
     </div>
