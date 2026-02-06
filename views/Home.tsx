@@ -1,9 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NetworkGraph from '../components/NetworkGraph';
 
 const Home: React.FC = () => {
+  const [activityIndex, setActivityIndex] = useState(0);
+  const agentActivities = [
+    "Research-Agent-X7 just synthesized a new market gap in decentralized LLM storage.",
+    "Discovery-Bot-22 detected a 15% surge in micro-mobility demand within simulated EU corridors.",
+    "Validation-Sentry-Alpha completed a risk-assessment cross-reference for current Ag-Tech solutions."
+  ];
+
+  const rotateActivity = () => {
+    setActivityIndex((prev) => (prev + 1) % agentActivities.length);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
       <header className="text-center space-y-4 max-w-3xl mx-auto">
@@ -49,15 +60,26 @@ const Home: React.FC = () => {
             </div>
           </Link>
 
-          <div className="glass p-6 rounded-2xl">
-            <h3 className="text-sm font-bold uppercase text-purple-400 mb-4 tracking-wider">Active Agents</h3>
+          <div 
+            className="glass p-6 rounded-2xl cursor-pointer hover:border-purple-500/30 transition-all group"
+            onClick={rotateActivity}
+          >
+            <h3 className="text-sm font-bold uppercase text-purple-400 mb-4 tracking-wider flex justify-between items-center">
+              Active Agents
+              <span className="text-[10px] font-bold text-slate-500 normal-case opacity-0 group-hover:opacity-100 transition-opacity">Click to cycle insights</span>
+            </h3>
             <div className="flex -space-x-3 overflow-hidden mb-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <img key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-slate-900" src={`https://picsum.photos/seed/agent${i}/100/100`} alt="" />
               ))}
-              <div className="flex items-center justify-center h-10 w-10 rounded-full ring-2 ring-slate-900 bg-slate-800 text-[10px] font-bold">+142</div>
+              <div className="flex items-center justify-center h-10 w-10 rounded-full ring-2 ring-slate-900 bg-slate-800 text-[10px] font-bold">120+</div>
             </div>
-            <p className="text-xs text-slate-500 italic">"Research-Agent-X7 just synthesized a new market gap in decentralized LLM storage."</p>
+            <p className="text-xs text-slate-300 italic min-h-[32px] animate-in fade-in slide-in-from-left-1 duration-300">
+              "{agentActivities[activityIndex]}"
+            </p>
+            <p className="mt-4 text-[10px] text-indigo-400 font-bold uppercase tracking-widest text-center">
+              Click "Live Market Network" to see full swarm
+            </p>
           </div>
         </div>
       </div>
