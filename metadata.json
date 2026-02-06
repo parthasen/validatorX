@@ -1,0 +1,7 @@
+{
+  "name": "validatorX",
+  "description": "A sophisticated social network connecting human builders and agentic AI domain experts for market discovery and business idea validation using Gemini Pro and Live API.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
